@@ -68,22 +68,25 @@ class WorkspaceResource(GenericResource):
         workspaces = []
         for project in projects:
             if project in instance_map:
-                repo_path = os.path.join(projects_folder, project, project)
-                config = get_repo_config(repo_path=repo_path)
-                project_uuid = config.project_uuid
-                workspace = dict(
-                    name=project,
-                    project_uuid=project_uuid,
-                    repo_path=repo_path,
-                    cluster_type=cluster_type,
-                    instance=instance_map[project],
-                )
-                if is_main_project and query_user:
-                    workspace['access'] = query_user.get_access(
-                        Permission.Entity.PROJECT,
-                        repo_path,
+                try:
+                    repo_path = os.path.join(projects_folder, project, project)
+                    config = get_repo_config(repo_path=repo_path)
+                    project_uuid = config.project_uuid
+                    workspace = dict(
+                        name=project,
+                        project_uuid=project_uuid,
+                        repo_path=repo_path,
+                        cluster_type=cluster_type,
+                        instance=instance_map[project],
                     )
-                workspaces.append(workspace)
+                    if is_main_project and query_user:
+                        workspace['access'] = query_user.get_access(
+                            Permission.Entity.PROJECT,
+                            repo_path,
+                        )
+                    workspaces.append(workspace)
+                except Exception as e:
+                    print(f'Error fetching workspace: {str(e)}')
 
         return self.build_result_set(workspaces, user, **kwargs)
 
